@@ -445,21 +445,48 @@
         }
 
         // Floating random stickers - static positions
-        const stickers = ["❤️", "🔮", "♾️", "🌍", "💰", "👶", "😊", "💪", "🍔", "🙏", "🏠", "🚗", "🏍️", "✈️", "⌚", "💎", "🌹", "💼", "🏡", "🤑", "💑", "S", "💍", "D"];
-        const stickerCount = 30; // how many random stickers you want on screen
+        //const stickers = ["❤️", "🔮", "♾️", "🌍", "💰", "👶", "😊", "💪", "🍔", "🙏", "🏠", "🚗", "🏍️", "✈️", "⌚", "💎", "🌹", "💼", "🏡", "🤑", "💑", "S", "💍", "D"];
+        const stickers = ["❤️", "💖", "💘", "💝", "💌", "💍", "💑", "💏", "💕", "💞", "💓",
+            "🏆", "🎯", "🌟", "💼", "📈", "🏅", "🥇", "🚀", "🎓", "📝", "💡", "📌",
+            "💪", "🏋️", "🏃", "🤹", "⚡", "🔥", "⏳", "🛠️", "📚", "💼", "🧠",
+            "👶", "🧒", "👧", "👦", "👨‍👩‍👧‍👦", "🏡", "🎠", "🍼", "🧸",
+            "💰", "💵", "💸", "🪙", "💎", "🏦", "🤑", "💴", "💶", "💷", "💳", "🏦",
+            "✈️", "🌍", "🗺️", "🏝️", "🗽", "🏖️", "🚢", "🚗", "🛩️", "🏔️", "🏕️",
+            "🙏", "🤝", "🫂", "💌", "🫶", "🕊️",
+            "😊", "😄", "😁", "😃", "🌞", "🌈", "🌸", "🌹", "🌻", "🍎", "🥗", "🏃‍♂️", "🧘‍♀️",
+            "🎉", "🎊", "🎈", "🍕", "🍔", "🍦", "🎵", "🎶", "🎮", "🏖️", "🎡", "🏄‍♂️", "🛶",
+            "S", "D",
+            "🚗", "🏍️", "🛵", "🚲", "⌚", "💼", "🏠", "🏡", "🏢", "💎", "🥂", "🍷", "🎁"];
+        // const stickerCount = 30; // how many random stickers you want on screen
+        const stickerCount = stickers.length;
 
         function createRandomStickers() {
             const container = document.getElementById("floating-stickers");
+            const title = document.querySelector("h2");
+            const titleRect = title.getBoundingClientRect(); // get title position
+
             for (let i = 0; i < stickerCount; i++) {
                 const stickerEl = document.createElement("div");
                 stickerEl.classList.add("floating-sticker");
                 stickerEl.textContent = stickers[Math.floor(Math.random() * stickers.length)];
-                stickerEl.style.top = Math.random() * (window.innerHeight - 50) + "px";
-                stickerEl.style.left = Math.random() * (window.innerWidth - 50) + "px";
+
+                let top, left;
+                // Ensure sticker is not on title
+                do {
+                    top = Math.random() * (window.innerHeight - 50);
+                    left = Math.random() * (window.innerWidth - 50);
+                } while (
+                    top + 30 > titleRect.top && top < titleRect.bottom &&
+                    left + 30 > titleRect.left && left < titleRect.right
+                );
+
+                stickerEl.style.top = top + "px";
+                stickerEl.style.left = left + "px";
                 stickerEl.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.7})`;
                 container.appendChild(stickerEl);
             }
         }
+
 
         // Call once when page loads
         createRandomStickers();
