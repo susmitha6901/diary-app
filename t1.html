@@ -22,6 +22,12 @@
             width: 350px;
         }
 
+        .today {
+            border: 2px solid #2196F3;
+            background-color: #e3f2fd;
+            font-weight: bold;
+        }
+
         /* ===== LOGIN SCREEN ===== */
         #login-screen {
             position: fixed;
@@ -298,15 +304,26 @@
                 dayEl.classList.add("day");
                 dayEl.textContent = d;
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+
+                // Highlight diary dates with ❤️
                 if (highlightedDates.includes(dateStr)) {
                     const heart = document.createElement("span");
                     heart.classList.add("heart");
                     heart.textContent = "❤️";
                     dayEl.appendChild(heart);
                 }
+
+                // 🔹 Highlight today's date
+                const today = new Date();
+                const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+                if (dateStr === todayStr) {
+                    dayEl.classList.add("today");
+                }
+
                 dayEl.onclick = () => selectDate(d);
                 calendarDays.appendChild(dayEl);
             }
+
         }
 
         function selectDate(d) {

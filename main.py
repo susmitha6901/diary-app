@@ -1,14 +1,13 @@
 from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-import subprocess
-import sys
 import os
 import json
+from datetime import datetime
 
 app = FastAPI()
 
-# Allow frontend requests
+# Enable CORS for frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -33,21 +32,14 @@ def save_data(data):
 # -------- Serve Frontend --------
 @app.get("/", response_class=HTMLResponse)
 def serve_ui():
+    """Serve the HTML diary frontend."""
     html_path = os.path.join(os.path.dirname(__file__), "t1.html")
-    with open(html_path, "r", encoding="utf-8") as f:
-        return f.read()
+    if os.path.exists(html_path):
+        with open(html_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return "<h1>Diary App Backend Running</h1>"
 
 # -------- API Routes --------
-@app.get("/open-diary")
-def open_diary():
-    """Launch the Tkinter diary app."""
-    try:
-        script_path = os.path.join(os.path.dirname(__file__), "diary.py")
-        subprocess.Popen([sys.executable, script_path])
-        return {"status": "success", "message": "Diary app opened successfully"}
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
 @app.get("/entries/{date}")
 def get_entry(date: str):
     """Get diary entry for a specific date (dd-mm-yyyy)."""
@@ -70,10 +62,12 @@ def save_entry(entry_data: dict = Body(...)):
 def get_highlighted_dates():
     """Return all dates that have entries."""
     data = load_data()
-    # Convert dd-mm-yyyy to yyyy-mm-dd for frontend
     highlighted = []
     for date_str in data:
         if data[date_str].strip():
-            d, m, y = date_str.split("-")
-            highlighted.append(f"{y}-{m}-{d}")
+            try:
+                d, m, y = date_str.split("-")
+                highlighted.append(f"{y}-{m}-{d}")  # ISO format
+            except:
+                pass
     return {"dates": highlighted}
