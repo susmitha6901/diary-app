@@ -275,7 +275,9 @@
     </div>
 
     <script>
-        const API_BASE = "http://localhost:8000";
+        const API_BASE = window.location.hostname === "localhost"
+            ? "http://localhost:8000"
+            : "https://diary-app-dp0g.onrender.com";
         const CORRECT_PASSWORD = "manifeSteDlife";
 
         function checkLogin() {
@@ -462,31 +464,16 @@
 
         function createRandomStickers() {
             const container = document.getElementById("floating-stickers");
-            const title = document.querySelector("h2");
-            const titleRect = title.getBoundingClientRect(); // get title position
-
             for (let i = 0; i < stickerCount; i++) {
                 const stickerEl = document.createElement("div");
                 stickerEl.classList.add("floating-sticker");
                 stickerEl.textContent = stickers[Math.floor(Math.random() * stickers.length)];
-
-                let top, left;
-                // Ensure sticker is not on title
-                do {
-                    top = Math.random() * (window.innerHeight - 50);
-                    left = Math.random() * (window.innerWidth - 50);
-                } while (
-                    top + 30 > titleRect.top && top < titleRect.bottom &&
-                    left + 30 > titleRect.left && left < titleRect.right
-                );
-
-                stickerEl.style.top = top + "px";
-                stickerEl.style.left = left + "px";
+                stickerEl.style.top = Math.random() * (window.innerHeight - 50) + "px";
+                stickerEl.style.left = Math.random() * (window.innerWidth - 50) + "px";
                 stickerEl.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.7})`;
                 container.appendChild(stickerEl);
             }
         }
-
 
         // Call once when page loads
         createRandomStickers();
