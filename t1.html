@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Diary with Calendar</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fdf6e3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 350px;
+        }
+
+        /* ===== LOGIN SCREEN ===== */
+        #login-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fdf6e3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #login-box {
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+
+        #login-box input {
+            padding: 10px;
+            width: 200px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+        }
+
+        #login-box button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 8px;
+            background-color: #2196F3;
+            color: white;
+            cursor: pointer;
+        }
+
+        #login-box button:hover {
+            background-color: #1e87db;
+        }
+
+        #error-msg {
+            color: red;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* ===== Rest of your existing styles ===== */
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .day-name {
+            font-weight: bold;
+            text-align: center;
+            padding: 5px;
+        }
+
+        .day {
+            text-align: center;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .day:hover {
+            background: #eee;
+        }
+
+        .selected {
+            background-color: lightblue !important;
+        }
+
+        .heart {
+            font-size: 12px;
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+        }
+
+        #diary-text {
+            display: block;
+            margin: 0 auto 15px auto;
+            width: 90%;
+            max-width: 600px;
+            height: 200px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            padding: 12px 15px;
+            background: #fffef9;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
+            line-height: 1.6;
+            font-family: 'Georgia', serif;
+            overflow: auto;
+        }
+
+        button {
+            padding: 6px 10px;
+            border: none;
+            border-radius: 8px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            margin-right: 5px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        .toggle-btn {
+            margin-bottom: 10px;
+            background-color: #2196F3;
+        }
+
+        .toggle-btn:hover {
+            background-color: #1e87db;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .toggle-group button {
+            background-color: transparent;
+            color: black;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 8px;
+            font-weight: bold;
+        }
+
+        .toggle-group button:hover {
+            color: #555;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div id="login-screen">
+        <div id="login-box">
+            <h3>Enter Password</h3>
+            <input type="password" id="password-input" placeholder="Password">
+            <br>
+            <button onclick="checkLogin()">Login</button>
+            <div id="error-msg"></div>
+        </div>
+    </div>
+
+    <!-- ===== Diary UI (hidden until login succeeds) ===== -->
+    <div id="diary-ui" class="hidden">
+        <h2>Diary with Calendar</h2>
+        <div class="container">
+            <button class="toggle-btn" onclick="toggleCalendar()">Show/Hide Calendar</button>
+
+            <div id="calendar-container">
+                <div class="calendar-header">
+                    <div class="toggle-group">
+                        <button onclick="prevMonth()">&lt;</button>
+                        <span id="month-label"></span>
+                        <button onclick="nextMonth()">&gt;</button>
+                    </div>
+
+                    <div class="toggle-group">
+                        <button onclick="prevYear()">&lt;</button>
+                        <span id="year-label"></span>
+                        <button onclick="nextYear()">&gt;</button>
+                    </div>
+                </div>
+
+                <div class="calendar" id="calendar-days"></div>
+            </div>
+
+            <div id="selected-date" style="text-align:center; font-weight:bold; margin-bottom:10px; display:none;">
+            </div>
+
+            <div id="diary-text" contenteditable="true" placeholder="Write your diary entry..."></div>
+
+            <div>
+                <button onclick="strikeText()">Strike</button>
+                <button onclick="unstrikeText()">Unstrike</button>
+                <button onclick="saveEntry()">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8000";
+
+        // ===== LOGIN LOGIC =====
+        const CORRECT_PASSWORD = "Susmith@161218"; // change your password here
+
+        function checkLogin() {
+            const input = document.getElementById("password-input").value;
+            const errorMsg = document.getElementById("error-msg");
+
+            if (input === CORRECT_PASSWORD) {
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("diary-ui").classList.remove("hidden");
+            } else {
+                errorMsg.textContent = "Sorry, you are not Susmitha!";
+            }
+        }
+
+        // ===== EXISTING DIARY JS CODE =====
+        const monthLabel = document.getElementById("month-label");
+        const yearLabel = document.getElementById("year-label");
+        const calendarDays = document.getElementById("calendar-days");
+        const diaryText = document.getElementById("diary-text");
+        const selectedDateLabel = document.getElementById("selected-date");
+
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        let selectedDate = null;
+        let highlightedDates = [];
+
+        function updateLabels() {
+            monthLabel.textContent = months[currentMonth];
+            yearLabel.textContent = currentYear;
+        }
+
+        async function loadHighlightedDates() {
+            try {
+                const res = await fetch(`${API_BASE}/highlighted-dates`);
+                const data = await res.json();
+                highlightedDates = data.dates;
+                generateCalendar();
+            } catch (err) { console.error(err); }
+        }
+
+        function generateCalendar() {
+            calendarDays.innerHTML = "";
+            const dayNames = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+            dayNames.forEach(day => {
+                const el = document.createElement("div");
+                el.classList.add("day-name");
+                el.textContent = day;
+                calendarDays.appendChild(el);
+            });
+
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const startDay = (firstDay === 0 ? 7 : firstDay) - 1;
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            for (let i = 0; i < startDay; i++) calendarDays.appendChild(document.createElement("div"));
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dayEl = document.createElement("div");
+                dayEl.classList.add("day");
+                dayEl.textContent = d;
+                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+                if (highlightedDates.includes(dateStr)) {
+                    const heart = document.createElement("span");
+                    heart.classList.add("heart");
+                    heart.textContent = "❤️";
+                    dayEl.appendChild(heart);
+                }
+                dayEl.onclick = () => selectDate(d);
+                calendarDays.appendChild(dayEl);
+            }
+        }
+
+        function selectDate(d) {
+            document.querySelectorAll(".day").forEach(day => day.classList.remove("selected"));
+            Array.from(calendarDays.getElementsByClassName("day")).forEach(dayEl => {
+                if (parseInt(dayEl.textContent) === d) dayEl.classList.add("selected");
+            });
+            selectedDate = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+            const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][new Date(currentYear, currentMonth, d).getDay()];
+            selectedDateLabel.textContent = `${dayName}, ${d} ${months[currentMonth]} ${currentYear}`;
+            selectedDateLabel.style.display = "block";
+            loadEntry(selectedDate);
+        }
+
+        function prevMonth() { currentMonth = (currentMonth + 11) % 12; updateLabels(); generateCalendar(); }
+        function nextMonth() { currentMonth = (currentMonth + 1) % 12; updateLabels(); generateCalendar(); }
+        function prevYear() { currentYear--; updateLabels(); generateCalendar(); }
+        function nextYear() { currentYear++; updateLabels(); generateCalendar(); }
+
+        function toggleCalendar() { document.getElementById("calendar-container").classList.toggle("hidden"); }
+
+        function strikeText() {
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+            const range = sel.getRangeAt(0);
+            if (range.collapsed) return;
+            const span = document.createElement("span");
+            span.style.textDecoration = "line-through";
+            range.surroundContents(span);
+        }
+
+        function unstrikeText() {
+            const sel = window.getSelection();
+            if (!sel.rangeCount) return;
+            const range = sel.getRangeAt(0);
+            const parent = range.commonAncestorContainer;
+            if (parent.nodeType === Node.ELEMENT_NODE) {
+                if (parent.style && parent.style.textDecoration === "line-through") parent.style.textDecoration = "none";
+            } else if (parent.nodeType === Node.TEXT_NODE) {
+                let el = parent.parentElement;
+                if (el.style && el.style.textDecoration === "line-through") el.style.textDecoration = "none";
+            }
+        }
+
+        async function saveEntry() {
+            if (!selectedDate) { alert("Select a date first!"); return; }
+            const [y, m, d] = selectedDate.split("-");
+            const apiDate = `${d}-${m}-${y}`;
+            try {
+                const res = await fetch(`${API_BASE}/entries`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ date: apiDate, text: diaryText.innerHTML })
+                });
+                const data = await res.json();
+                alert(data.message);
+                await loadHighlightedDates();
+            } catch (err) { console.error(err); }
+        }
+
+        async function loadEntry(date) {
+            const [y, m, d] = date.split("-");
+            const apiDate = `${d}-${m}-${y}`;
+            try {
+                const res = await fetch(`${API_BASE}/entries/${apiDate}`);
+                const data = await res.json();
+                diaryText.innerHTML = data.entry || "";
+            } catch (err) { console.error(err); }
+        }
+
+        (async () => {
+            updateLabels();
+            await loadHighlightedDates();
+        })();
+    </script>
+</body>
+
+</html>
