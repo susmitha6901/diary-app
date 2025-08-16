@@ -12,6 +12,8 @@
             flex-direction: column;
             align-items: center;
             padding: 20px;
+            position: relative;
+            overflow-x: hidden;
         }
 
         .container {
@@ -20,6 +22,8 @@
             padding: 20px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             width: 350px;
+            position: relative;
+            z-index: 10;
         }
 
         .today {
@@ -78,7 +82,7 @@
             margin-top: 8px;
         }
 
-        /* ===== Rest of your existing styles ===== */
+        /* ===== Calendar ===== */
         .calendar-header {
             display: flex;
             justify-content: space-between;
@@ -129,6 +133,7 @@
             right: 2px;
         }
 
+        /* ===== Diary Text ===== */
         #diary-text {
             display: block;
             margin: 0 auto 15px auto;
@@ -186,6 +191,36 @@
         .toggle-group button:hover {
             color: #555;
         }
+
+        /* ===== Stickers ===== */
+        .sticker {
+            font-size: 30px;
+            margin: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .sticker:hover {
+            transform: scale(1.3);
+        }
+
+        #floating-stickers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 5;
+        }
+
+        .floating-sticker {
+            position: absolute;
+            font-size: 25px;
+            user-select: none;
+            transition: transform 0.5s;
+        }
     </style>
 </head>
 
@@ -201,9 +236,12 @@
         </div>
     </div>
 
-    <!-- ===== Diary UI (hidden until login succeeds) ===== -->
+    <!-- Floating stickers container -->
+    <div id="floating-stickers"></div>
+
+    <!-- ===== Diary UI ===== -->
     <div id="diary-ui" class="hidden">
-        <h2>Diary with Calendar</h2>
+        <h2>Snapshots of My Future</h2>
         <div class="container">
             <button class="toggle-btn" onclick="toggleCalendar()">Show/Hide Calendar</button>
 
@@ -214,7 +252,6 @@
                         <span id="month-label"></span>
                         <button onclick="nextMonth()">&gt;</button>
                     </div>
-
                     <div class="toggle-group">
                         <button onclick="prevYear()">&lt;</button>
                         <span id="year-label"></span>
@@ -227,7 +264,6 @@
 
             <div id="selected-date" style="text-align:center; font-weight:bold; margin-bottom:10px; display:none;">
             </div>
-
             <div id="diary-text" contenteditable="true" placeholder="Write your diary entry..."></div>
 
             <div>
@@ -240,14 +276,11 @@
 
     <script>
         const API_BASE = "http://localhost:8000";
-
-        // ===== LOGIN LOGIC =====
-        const CORRECT_PASSWORD = "Susmith@161218"; // change your password here
+        const CORRECT_PASSWORD = "manifeSteDlife";
 
         function checkLogin() {
             const input = document.getElementById("password-input").value;
             const errorMsg = document.getElementById("error-msg");
-
             if (input === CORRECT_PASSWORD) {
                 document.getElementById("login-screen").style.display = "none";
                 document.getElementById("diary-ui").classList.remove("hidden");
@@ -256,14 +289,15 @@
             }
         }
 
-        // ===== EXISTING DIARY JS CODE =====
         const monthLabel = document.getElementById("month-label");
         const yearLabel = document.getElementById("year-label");
         const calendarDays = document.getElementById("calendar-days");
         const diaryText = document.getElementById("diary-text");
         const selectedDateLabel = document.getElementById("selected-date");
 
-        const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        const months = ["January", "February", "March", "April", "May", "June", "July", "August",
+            "September", "October", "November", "December"
+        ];
 
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
@@ -281,7 +315,9 @@
                 const data = await res.json();
                 highlightedDates = data.dates;
                 generateCalendar();
-            } catch (err) { console.error(err); }
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         function generateCalendar() {
@@ -305,7 +341,6 @@
                 dayEl.textContent = d;
                 const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
-                // Highlight diary dates with ❤️
                 if (highlightedDates.includes(dateStr)) {
                     const heart = document.createElement("span");
                     heart.classList.add("heart");
@@ -313,7 +348,6 @@
                     dayEl.appendChild(heart);
                 }
 
-                // 🔹 Highlight today's date
                 const today = new Date();
                 const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
                 if (dateStr === todayStr) {
@@ -323,7 +357,6 @@
                 dayEl.onclick = () => selectDate(d);
                 calendarDays.appendChild(dayEl);
             }
-
         }
 
         function selectDate(d) {
@@ -394,10 +427,46 @@
             } catch (err) { console.error(err); }
         }
 
-        (async () => {
-            updateLabels();
-            await loadHighlightedDates();
-        })();
+        function insertSticker(sticker) {
+            const sel = window.getSelection();
+            if (!sel.rangeCount) {
+                diaryText.innerHTML += sticker;
+                return;
+            }
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            const span = document.createElement("span");
+            span.textContent = sticker;
+            range.insertNode(span);
+            range.setStartAfter(span);
+            range.setEndAfter(span);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+
+        // Floating random stickers - static positions
+        const stickers = ["❤️", "🔮", "♾️", "🌍", "💰", "👶", "😊", "💪", "🍔", "🙏", "🏠", "🚗", "🏍️", "✈️", "⌚", "💎", "🌹", "💼", "🏡", "🤑", "💑", "S", "💍", "D"];
+        const stickerCount = 30; // how many random stickers you want on screen
+
+        function createRandomStickers() {
+            const container = document.getElementById("floating-stickers");
+            for (let i = 0; i < stickerCount; i++) {
+                const stickerEl = document.createElement("div");
+                stickerEl.classList.add("floating-sticker");
+                stickerEl.textContent = stickers[Math.floor(Math.random() * stickers.length)];
+                stickerEl.style.top = Math.random() * (window.innerHeight - 50) + "px";
+                stickerEl.style.left = Math.random() * (window.innerWidth - 50) + "px";
+                stickerEl.style.transform = `rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.7})`;
+                container.appendChild(stickerEl);
+            }
+        }
+
+        // Call once when page loads
+        createRandomStickers();
+
+
+        updateLabels();
+        loadHighlightedDates();
     </script>
 </body>
 
